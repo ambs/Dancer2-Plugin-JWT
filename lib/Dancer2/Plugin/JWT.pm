@@ -9,7 +9,7 @@ use Try::Tiny;
 use URI;
 use URI::QueryParam;
 
-#register_hook qw(jwt_invalid_signature);
+register_hook qw(jwt_exception);
 
 my $config;
 
@@ -51,8 +51,7 @@ on_plugin_import {
 					try {
 						$decoded = decode_jwt($encoded, _get_secret());
 					} catch {
-						die "Catched something\n";
-						# ...
+						execute_hook 'jwt_exception' => $_;
 					};
 					$dsl->app->request->var('jwt', $decoded);
 				}
