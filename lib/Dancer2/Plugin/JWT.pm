@@ -11,16 +11,19 @@ use URI::QueryParam;
 
 #register_hook qw(jwt_invalid_signature);
 
+my $config;
+
 sub _get_secret {
-	my $settings = plugin_setting();
-	die "JWT cannot be used without a secret!" unless exists $settings->{secret};
-	return $settings->{secret};
+	die "JWT cannot be used without a secret!" unless exists $config->{secret};
+	return $config->{secret};
 }
 
 
 register jwt => sub {
 	my $dsl = shift;
 	my @args = @_;
+
+	$config = plugin_setting();
 
 	if (@args) {
 		$dsl->app->request->var(jwt => $args[0]);
