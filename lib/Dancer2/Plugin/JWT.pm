@@ -37,7 +37,11 @@ on_plugin_import {
 		Dancer2::Core::Hook->new(
 			name => 'before',
 			code => sub {
-				my $encoded = $dsl->app->request->header('Authorization');
+				my $encoded = $dsl->app->request->headers->authorization;
+
+				if (!$encoded && $dsl->app->request->param('_jwt')) {
+					$encoded = $dsl->app->request->param('_jwt');
+				}
 
 				if ($encoded) {
 					my $decoded;
@@ -58,24 +62,16 @@ on_plugin_import {
 			name => 'after',
 			code => sub {
 				my $response = shift;
-
                 my $decoded = $dsl->app->request->var('jwt');
                 if (defined($decoded)) {
-
-					if ($response->status =~ /^2/) {
-						my $encoded = encode_jwt($decoded, _get_secret());
-						$response->header("Authorization", $encoded);
-		     	   }
+					my $encoded = encode_jwt($decoded, _get_secret());
+					$response->headers->authorization($encoded);
+					if ($response->status =~ /^3/) {
+	                	my $u = URI->new( $response->header("Location") );
+		                $u->query_param( _jwt => $encoded);
+	     	            $response->header(Location => $u);
+     	     	   }
 				}
-				# if ($response->status =~ /^3/) {
-	   #              my $u = URI->new( $response->header("Location") );
-	   #              my $x = $dsl->app->request->var('jwt');
-	   #              if (defined($x)) {
-		  #               $x = { data => $x } unless (ref($x) || "") eq "HASH";
-		  #               $u->query_param( _jwt => encode_jwt($x, _get_secret()));
-	   #  	            $response->header(Location => $u);
-    # 	     	   }
-	   #  	    }
 			}
 		)
 	);
