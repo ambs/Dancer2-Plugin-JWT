@@ -30,9 +30,7 @@ register jwt => sub {
 	if (@args) {
 		$dsl->app->request->var(jwt => $args[0]);
 	}
-	else {
-		return $dsl->app->request->var('jwt') || undef;
-	}
+	return $dsl->app->request->var('jwt') || undef;
 };
 
 on_plugin_import {
