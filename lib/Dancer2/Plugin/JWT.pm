@@ -14,6 +14,7 @@ register_hook qw(jwt_exception);
 my $config;
 
 sub _get_secret {
+	$config = plugin_setting();
 	die "JWT cannot be used without a secret!" unless exists $config->{secret};
 	return $config->{secret};
 }
@@ -22,8 +23,6 @@ sub _get_secret {
 register jwt => sub {
 	my $dsl = shift;
 	my @args = @_;
-
-	$config = plugin_setting();
 
 	if (@args) {
 		$dsl->app->request->var(jwt => $args[0]);
@@ -35,6 +34,8 @@ register jwt => sub {
 
 on_plugin_import {
 	my $dsl = shift;
+
+	
 
 	$dsl->app->add_hook(
 		Dancer2::Core::Hook->new(
@@ -52,7 +53,7 @@ on_plugin_import {
 					try {
 						$decoded = decode_jwt($encoded, $secret);
 					} catch {
-						execute_hook 'jwt_exception' => $_;
+						execute_hook('jwt_exception' => $_);
 					};
 					$dsl->app->request->var('jwt', $decoded);
 				}

@@ -6,7 +6,7 @@ use Test::More import => ['!pass'];
 use  Test::WWW::Mechanize::PSGI;
 use HTTP::Request::Common;
 use JSON::WebToken;
-
+use Data::Dumper;
 
 #plan tests => 5;
 
@@ -19,13 +19,13 @@ use JSON::WebToken;
 	set plugins => { JWT => { secret => 'secret'}};
 
 	hook 'jwt_exception' => sub { 
-		use Data::Dumper;
-		die Dumper(\@_);
+		my $exception = shift;
+		halt(Dumper($exception));
 	};
 
 	get '/' => sub {
 		"OK";
-	}
+	};
 
 }
 
@@ -37,7 +37,10 @@ my $mech =  Test::WWW::Mechanize::PSGI -> new ( app => $app );
 my $authorization = 'FDAHFKDAHFKDFKAGFKAHKJAHFKgdhfdhfajkdgdsad';
 $mech->add_header("Authorization" => $authorization);
 $mech->get_ok("/");
-
-
+my $exception = $mech->content();
+$exception = eval "my $exception";
+is ref($exception), "JSON::WebToken::Exception", "Exception with correct type";
+ok exists($exception->{message}), "Exception includes a message";
+ok exists($exception->{code}), "Exception includes a code";
 
 done_testing();
