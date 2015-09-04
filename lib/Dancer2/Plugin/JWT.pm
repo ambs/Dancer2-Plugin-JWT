@@ -48,8 +48,9 @@ on_plugin_import {
 
 				if ($encoded) {
 					my $decoded;
+					my $secret = _get_secret();
 					try {
-						$decoded = decode_jwt($encoded, _get_secret());
+						$decoded = decode_jwt($encoded, $secret);
 					} catch {
 						execute_hook 'jwt_exception' => $_;
 					};
