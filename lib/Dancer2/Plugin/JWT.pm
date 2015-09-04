@@ -14,7 +14,8 @@ register_hook qw(jwt_exception);
 my $config;
 
 sub _get_secret {
-	$config = plugin_setting();
+	my $dsl = shift;
+	$config = $dsl->config->{plugins}{JWT};
 	die "JWT cannot be used without a secret!" unless exists $config->{secret};
 	return $config->{secret};
 }
@@ -23,6 +24,8 @@ sub _get_secret {
 register jwt => sub {
 	my $dsl = shift;
 	my @args = @_;
+
+#	$config = plugin_setting();
 
 	if (@args) {
 		$dsl->app->request->var(jwt => $args[0]);
@@ -49,7 +52,7 @@ on_plugin_import {
 
 				if ($encoded) {
 					my $decoded;
-					my $secret = _get_secret();
+					my $secret = _get_secret($dsl);
 					try {
 						$decoded = decode_jwt($encoded, $secret);
 					} catch {
@@ -68,7 +71,7 @@ on_plugin_import {
 				my $response = shift;
                 my $decoded = $dsl->app->request->var('jwt');
                 if (defined($decoded)) {
-					my $encoded = encode_jwt($decoded, _get_secret());
+					my $encoded = encode_jwt($decoded, _get_secret($dsl));
 					$response->headers->authorization($encoded);
 					if ($response->status =~ /^3/) {
 	                	my $u = URI->new( $response->header("Location") );
