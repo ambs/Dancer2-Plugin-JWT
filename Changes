@@ -1,3 +1,8 @@
 
+0.002  2015-09-06
+	- Request Dancer2 0.162000.
+	- Better dist.ini.
+	- jwt now returns the payload.
+
 0.001  2015-09-04
 	- First version with basic behavior.
