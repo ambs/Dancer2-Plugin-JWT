@@ -5,7 +5,6 @@ package Dancer2::Plugin::JWT;
 
 use Dancer2::Plugin;
 use JSON::WebToken;
-use Try::Tiny;
 use URI;
 use URI::QueryParam;
 
@@ -19,7 +18,6 @@ sub _get_secret {
 	die "JWT cannot be used without a secret!" unless exists $config->{secret};
 	return $config->{secret};
 }
-
 
 register jwt => sub {
 	my $dsl = shift;
@@ -36,36 +34,31 @@ register jwt => sub {
 on_plugin_import {
 	my $dsl = shift;
 
-	
+	$dsl->hook(
+		before => sub {
+				my $app = shift;
+				my $encoded = $app->request->headers->authorization;
 
-	$dsl->app->add_hook(
-		Dancer2::Core::Hook->new(
-			name => 'before',
-			code => sub {
-				my $encoded = $dsl->app->request->headers->authorization;
-
-				if (!$encoded && $dsl->app->request->param('_jwt')) {
-					$encoded = $dsl->app->request->param('_jwt');
+				if (!$encoded && $app->request->param('_jwt')) {
+					$encoded = $app->request->param('_jwt');
 				}
 
 				if ($encoded) {
 					my $decoded;
 					my $secret = _get_secret($dsl);
-					try {
+					eval {
 						$decoded = decode_jwt($encoded, $secret);
-					} catch {
-						execute_hook('jwt_exception' => $_);
 					};
-					$dsl->app->request->var('jwt', $decoded);
+					if ($@) {
+						$dsl->execute_hook('jwt_exception' => $@);
+					};
+					$app->request->var('jwt', $decoded);
 				}
 			}
-		)
-	);
+		);
 
-	$dsl->app->add_hook(
-		Dancer2::Core::Hook->new(
-			name => 'after',
-			code => sub {
+	$dsl->hook(
+		after => sub {
 				my $response = shift;
                 my $decoded = $dsl->app->request->var('jwt');
                 if (defined($decoded)) {
@@ -78,7 +71,6 @@ on_plugin_import {
      	     	   }
 				}
 			}
-		)
 	);
 };
 
