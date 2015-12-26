@@ -35,11 +35,18 @@ on_plugin_import {
 	my $dsl = shift;
 
 	$dsl->hook(
+		before_template => sub {
+		   my $tokens = shift;
+		   $tokens->{jwt} = request->var('jwt');
+		}
+	);
+
+	$dsl->hook(
 		before => sub {
 				my $app = shift;
 				my $encoded = $app->request->headers->authorization;
 
-				if (!$encoded && $app->request->param('_jwt')) {
+				if ($app->request->param('_jwt')) {
 					$encoded = $app->request->param('_jwt');
 				}
 
@@ -50,7 +57,7 @@ on_plugin_import {
 						$decoded = decode_jwt($encoded, $secret);
 					};
 					if ($@) {
-						$dsl->execute_hook('jwt_exception' => $@);
+						$dsl->execute_hook('jwt_exception' => ($a = $@));
 					};
 					$app->request->var('jwt', $decoded);
 				}

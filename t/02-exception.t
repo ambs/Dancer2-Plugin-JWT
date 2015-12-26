@@ -19,8 +19,7 @@ use Data::Dumper;
 	set plugins => { JWT => { secret => 'secret'}};
 
 	hook 'jwt_exception' => sub { 
-		my $exception = shift;
-		halt(Dumper($exception));
+		halt(Dumper($_[0]));
 	};
 
 	get '/' => sub {
