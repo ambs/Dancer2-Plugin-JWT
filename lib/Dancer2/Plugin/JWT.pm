@@ -15,7 +15,7 @@ my $config;
 
 sub _get_secret {
 	my $dsl = shift;
-	$config = $dsl->config->{plugins}{JWT};
+	$config = plugin_setting;
 	die "JWT cannot be used without a secret!" unless exists $config->{secret};
 	return $config->{secret};
 }
