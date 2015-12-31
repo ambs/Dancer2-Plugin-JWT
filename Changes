@@ -1,4 +1,8 @@
 
+0.005  2015-12-31
+    - Compat with new plugin system. 
+      Thanks to Peter Mottram.
+
 0.004  2015-12-26
     - Make jwt available on template
     - Fixed problem with using $@ on hooks;
