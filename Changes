@@ -1,7 +1,7 @@
 
 0.005  2015-12-31
     - Compat with new plugin system. 
-      Thanks to Peter Mottram.
+      Thanks to Peter Mottram.d
 
 0.004  2015-12-26
     - Make jwt available on template
