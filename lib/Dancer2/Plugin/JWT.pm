@@ -13,81 +13,80 @@ register_hook qw(jwt_exception);
 my $config;
 
 sub _get_secret {
-	my $dsl = shift;
-	$config = plugin_setting;
-	die "JWT cannot be used without a secret!" unless exists $config->{secret};
-	return $config->{secret};
+    my $dsl = shift;
+    $config = plugin_setting;
+    die "JWT cannot be used without a secret!" unless exists $config->{secret};
+    return $config->{secret};
 }
 
 register jwt => sub {
-	my $dsl = shift;
-	my @args = @_;
+    my $dsl = shift;
+    my @args = @_;
 
-#	$config = plugin_setting();
 
-	if (@args) {
-		$dsl->app->request->var(jwt => $args[0]);
-	}
-	return $dsl->app->request->var('jwt') || undef;
+    if (@args) {
+        $dsl->app->request->var(jwt => $args[0]);
+    }
+    return $dsl->app->request->var('jwt') || undef;
 };
 
 on_plugin_import {
-	my $dsl = shift;
+    my $dsl = shift;
 
-	$dsl->app->add_hook(
+    $dsl->app->add_hook(
         Dancer2::Core::Hook->new(
             name => 'before_template_render',
             code => sub {
-		        my $tokens = shift;
-		        $tokens->{jwt} = request->var('jwt');
+                my $tokens = shift;
+                $tokens->{jwt} = request->var('jwt');
             }
         )
-	);
+    );
 
-	$dsl->app->add_hook(
+    $dsl->app->add_hook(
         Dancer2::Core::Hook->new(
             name => 'before',
             code => sub {
-				my $app = shift;
-				my $encoded = $app->request->headers->authorization;
+                my $app = shift;
+                my $encoded = $app->request->headers->authorization;
 
-				if ($app->request->param('_jwt')) {
-					$encoded = $app->request->param('_jwt');
-				}
+                if ($app->request->param('_jwt')) {
+                    $encoded = $app->request->param('_jwt');
+                }
 
-				if ($encoded) {
-					my $decoded;
-					my $secret = _get_secret($dsl);
-					eval {
-						$decoded = decode_jwt($encoded, $secret);
-					};
-					if ($@) {
-						$app->execute_hook('plugin.jwt.jwt_exception' => ($a = $@));
-					};
-					$app->request->var('jwt', $decoded);
-				}
-			}
-		)
+                if ($encoded) {
+                    my $decoded;
+                    my $secret = _get_secret($dsl);
+                    eval {
+                        $decoded = decode_jwt($encoded, $secret);
+                    };
+                    if ($@) {
+                        $app->execute_hook('plugin.jwt.jwt_exception' => ($a = $@));
+                    };
+                    $app->request->var('jwt', $decoded);
+                }
+            }
+        )
     );
 
-	$dsl->app->add_hook(
+    $dsl->app->add_hook(
         Dancer2::Core::Hook->new(
             name => 'after',
             code => sub {
-				my $response = shift;
+                my $response = shift;
                 my $decoded = $dsl->app->request->var('jwt');
                 if (defined($decoded)) {
-					my $encoded = encode_jwt($decoded, _get_secret($dsl));
-					$response->headers->authorization($encoded);
-					if ($response->status =~ /^3/) {
-	                	my $u = URI->new( $response->header("Location") );
-		                $u->query_param( _jwt => $encoded);
-	     	            $response->header(Location => $u);
-     	     	   }
-				}
-			}
+                    my $encoded = encode_jwt($decoded, _get_secret($dsl));
+                    $response->headers->authorization($encoded);
+                    if ($response->status =~ /^3/) {
+                        my $u = URI->new( $response->header("Location") );
+                        $u->query_param( _jwt => $encoded);
+                         $response->header(Location => $u);
+                     }
+                }
+            }
         )
-	);
+    );
 };
 
 
