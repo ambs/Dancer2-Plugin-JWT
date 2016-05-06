@@ -34,15 +34,20 @@ register jwt => sub {
 on_plugin_import {
 	my $dsl = shift;
 
-	$dsl->hook(
-		before_template => sub {
-		   my $tokens = shift;
-		   $tokens->{jwt} = request->var('jwt');
-		}
+	$dsl->app->add_hook(
+        Dancer2::Core::Hook->new(
+            name => 'before_template_render',
+            code => sub {
+		        my $tokens = shift;
+		        $tokens->{jwt} = request->var('jwt');
+            }
+        )
 	);
 
-	$dsl->hook(
-		before => sub {
+	$dsl->app->add_hook(
+        Dancer2::Core::Hook->new(
+            name => 'before',
+            code => sub {
 				my $app = shift;
 				my $encoded = $app->request->headers->authorization;
 
@@ -57,15 +62,18 @@ on_plugin_import {
 						$decoded = decode_jwt($encoded, $secret);
 					};
 					if ($@) {
-						$dsl->execute_hook('jwt_exception' => ($a = $@));
+						$app->execute_hook('plugin.jwt.jwt_exception' => ($a = $@));
 					};
 					$app->request->var('jwt', $decoded);
 				}
 			}
-		);
+		)
+    );
 
-	$dsl->hook(
-		after => sub {
+	$dsl->app->add_hook(
+        Dancer2::Core::Hook->new(
+            name => 'after',
+            code => sub {
 				my $response = shift;
                 my $decoded = $dsl->app->request->var('jwt');
                 if (defined($decoded)) {
@@ -78,6 +86,7 @@ on_plugin_import {
      	     	   }
 				}
 			}
+        )
 	);
 };
 
