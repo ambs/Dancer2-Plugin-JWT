@@ -12,11 +12,12 @@ use JSON::WebToken;
 
 {
 	use Dancer2;
+	BEGIN {
+		set plugins => { JWT => { secret => 'secret'}};
+	}
 	use Dancer2::Plugin::JWT;
 
 	set log => 'debug';
-
-	set plugins => { JWT => { secret => 'secret'}};
 
 	get '/defined/jwt' => sub {
 		defined(jwt) ? "DEFINED" : "UNDEFINED";

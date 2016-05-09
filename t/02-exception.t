@@ -12,11 +12,12 @@ use Data::Dumper;
 
 {
 	use Dancer2;
+	BEGIN {
+		set plugins => { JWT => { secret => 'secret'}};
+	}
 	use Dancer2::Plugin::JWT;
 
 	set log => 'debug';
-
-	set plugins => { JWT => { secret => 'secret'}};
 
 	hook 'jwt_exception' => sub { 
 		halt(Dumper($_[0]));
