@@ -10,14 +10,7 @@ use URI::QueryParam;
 
 register_hook qw(jwt_exception);
 
-my $config;
-
-sub _get_secret {
-    my $dsl = shift;
-    $config = plugin_setting;
-    die "JWT cannot be used without a secret!" unless exists $config->{secret};
-    return $config->{secret};
-}
+my $secret;
 
 register jwt => sub {
     my $dsl = shift;
@@ -32,6 +25,10 @@ register jwt => sub {
 
 on_plugin_import {
     my $dsl = shift;
+
+    my $config = plugin_setting;
+    die "JWT cannot be used without a secret!" unless exists $config->{secret};
+    $secret = $config->{secret};
 
     $dsl->app->add_hook(
         Dancer2::Core::Hook->new(
@@ -56,7 +53,6 @@ on_plugin_import {
 
                 if ($encoded) {
                     my $decoded;
-                    my $secret = _get_secret($dsl);
                     eval {
                         $decoded = decode_jwt($encoded, $secret);
                     };
@@ -76,7 +72,7 @@ on_plugin_import {
                 my $response = shift;
                 my $decoded = $dsl->app->request->var('jwt');
                 if (defined($decoded)) {
-                    my $encoded = encode_jwt($decoded, _get_secret($dsl));
+                    my $encoded = encode_jwt($decoded, $secret);
                     $response->headers->authorization($encoded);
                     if ($response->status =~ /^3/) {
                         my $u = URI->new( $response->header("Location") );
