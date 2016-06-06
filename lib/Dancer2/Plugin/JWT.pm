@@ -34,8 +34,8 @@ on_plugin_import {
         Dancer2::Core::Hook->new(
             name => 'before_template_render',
             code => sub {
-                my $tokens = shift;
-                $tokens->{jwt} = request->var('jwt');
+                my ($app, $tokens) = @_;
+                $tokens->{jwt} = $app->request->var('jwt');
             }
         )
     );
