@@ -13,10 +13,10 @@ register_hook qw(jwt_exception);
 my $secret;
 my $alg;
 my $enc;
-my $need_iat = 0;
-my $need_nbf = 0; 
-my $need_exp = 0;
-my $need_leeway = 0;
+my $need_iat = undef;
+my $need_nbf = undef;
+my $need_exp = undef;
+my $need_leeway = undef;
 
 register jwt => sub {
     my $dsl = shift;
@@ -62,7 +62,7 @@ on_plugin_import {
 
             $alg = $config->{alg};
             $need_enc = 1;
-        } elsif ( $config->{alg} eq /^PBES2-HS(256|384|512)\+A(128|192|256)KW$/ ) {
+        } elsif ( $config->{alg} =~ /^PBES2-HS(256|384|512)\+A(128|192|256)KW$/ ) {
             my $hs = $1;
             my $a = $2;
 
@@ -103,21 +103,23 @@ on_plugin_import {
             }
         }
 
-        if ( $need_key == 1 ) {
-             # TODO: add code to handle RSA keys or parse JWK hash string:
-             ##instance of Crypt::PK::RSA
-             #my $data = decode_jwt(token=>$t, key=>Crypt::PK::RSA->new('keyfile.pem'));
-             #
-             ##instance of Crypt::X509 (public key only)
-             #my $data = decode_jwt(token=>$t, key=>Crypt::X509->new(cert=>$cert));
-             # 
-             ##instance of Crypt::OpenSSL::X509 (public key only)
-             #my $data = decode_jwt(token=>$t, key=>Crypt::OpenSSL::X509->new_from_file('cert.pem'));
-        } elsif ( $need_key == 2 ) {
-             # TODO: add code to handle ECC keys or parse JWK hash string:
-             #instance of Crypt::PK::ECC
-             #my $data = decode_jwt(token=>$t, key=>Crypt::PK::ECC->new('keyfile.pem'));
-        }
+		if ( defined $need_key ) {
+			if ( $need_key eq 1 ) {
+				# TODO: add code to handle RSA keys or parse JWK hash string:
+				##instance of Crypt::PK::RSA
+				#my $data = decode_jwt(token=>$t, key=>Crypt::PK::RSA->new('keyfile.pem'));
+				#
+				##instance of Crypt::X509 (public key only)
+				#my $data = decode_jwt(token=>$t, key=>Crypt::X509->new(cert=>$cert));
+				#
+				##instance of Crypt::OpenSSL::X509 (public key only)
+				#my $data = decode_jwt(token=>$t, key=>Crypt::OpenSSL::X509->new_from_file('cert.pem'));
+			} elsif ( $need_key eq 2 ) {
+				# TODO: add code to handle ECC keys or parse JWK hash string:
+				#instance of Crypt::PK::ECC
+				#my $data = decode_jwt(token=>$t, key=>Crypt::PK::ECC->new('keyfile.pem'));
+			}
+		}
     }
 
     if ( exists $config->{need_iat} && defined $config->{need_iat} ) {
@@ -160,7 +162,7 @@ on_plugin_import {
                 if ($encoded) {
                     my $decoded;
                     eval {
-                        $decoded = decode_jwt( token => $encoded, key => $secret, verify_iat => $need_iat, verify_nbf => $need_nbf, verify_exp => $need_exp > 0 ? 1 : 0 , leeway => $need_leeway, accepted_alg => $alg, accepted_enc => $enc );
+                        $decoded = decode_jwt( token => $encoded, key => $secret, verify_iat => $need_iat, verify_nbf => $need_nbf, verify_exp => defined $need_exp ? 1 : 0 , leeway => $need_leeway, accepted_alg => $alg, accepted_enc => $enc );
                     };
                     if ($@) {
                         $app->execute_hook('plugin.jwt.jwt_exception' => ($a = $@));
@@ -178,7 +180,7 @@ on_plugin_import {
                 my $response = shift;
                 my $decoded = $dsl->app->request->var('jwt');
                 if (defined($decoded)) {
-                    my $encoded = encode_jwt( payload => $decoded, key => $secret, alg => $alg, enc => $enc, auto_iat => $need_iat, relative_exp => $need_exp, relative_nbf => 0 );
+                    my $encoded = encode_jwt( payload => $decoded, key => $secret, alg => $alg, enc => $enc, auto_iat => $need_iat, relative_exp => $need_exp, relative_nbf => $need_nbf );
                     $response->headers->authorization($encoded);
                     if ($response->status =~ /^3/) {
                         my $u = URI->new( $response->header("Location") );
