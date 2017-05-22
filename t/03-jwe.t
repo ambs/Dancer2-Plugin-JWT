@@ -13,7 +13,7 @@ use Crypt::JWT qw(encode_jwt decode_jwt);
 {
 	use Dancer2;
 	BEGIN {
-		set plugins => { JWT => { secret => 'secret'}};
+		set plugins => { JWT => { secret => 'secret', alg => 'PBES2-HS256+A128KW', enc => 'A128CBC-HS256' } };
 	}
 	use Dancer2::Plugin::JWT;
 
@@ -52,7 +52,7 @@ $mech->content_is("OK", "No exceptions on defining jwt");
 my $response = $mech->res();
 my $authorization = $response->authorization;
 ok($authorization, "We have something");
-my $x = decode_jwt(token => $authorization, key => "secret");
+my $x = decode_jwt( token => $authorization, key => "secret", alg => 'PBES2-HS256+A128KW', enc => 'A128CBC-HS256');
 is_deeply($x, {my => 'data'}, "Got correct data back");
 
 $mech->add_header("Authorization" => $authorization);
@@ -66,8 +66,10 @@ $mech->content_is("OK", "we redirected");
 $response = $mech->res();
 $authorization = $response->authorization;
 ok($authorization, "Redirect keeped jwt");
-$x = eval { decode_jwt(token => $authorization, key => "secret") };
+$x = eval { decode_jwt( token => $authorization, key => "secret", alg => 'PBES2-HS256+A128KW', enc => 'A128CBC-HS256' ) };
 is_deeply($x, {my => 'redirect'}, "Got correct data back even with redirect");
+
+
 
 done_testing();
 __END__
@@ -83,7 +85,7 @@ test_psgi $app, sub {
 		is $ans->content, "OK", "No exceptions on defining jwt";
 		my $authorization = $ans->header("Authorization");
 		ok($authorization, "We have something");
-		my $x = decode_jwt(token => $authorization, key => "secret");
+		my $x = decode_jwt( token => $authorization, key => "secret",  alg => 'PBES2-HS256+A128KW', enc => 'A128CBC-HS256' );
 		is_deeply($x, {my => 'data'}, "Got correct data back");
 
 		is $cb->(HTTP::Request->new(GET => '/defined/jwt',
