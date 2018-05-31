@@ -37,7 +37,7 @@ on_plugin_import {
     my $dsl = shift;
 
     my $config = plugin_setting;
-    die "JWT cannot be used without a secret!" unless exists $config->{secret};
+    die "JWT cannot be used without a secret!" unless (exists $config->{secret} && defined $config->{secret});
     # For RSA and ES algorithms - path to keyfile or JWK string, others algorithms - just secret string
     $secret = $config->{secret};
 
