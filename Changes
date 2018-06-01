@@ -1,3 +1,6 @@
+0.015  2018-06-01
+   - Check for undefined secret (thanks to Mohammad S Anwar)
+
 0.014  2018-05-31
    - Check for JWT in a cookie.
 
