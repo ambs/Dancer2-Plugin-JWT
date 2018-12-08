@@ -162,6 +162,7 @@ on_plugin_import {
 	    name => 'after',
 	    code => sub {
 		    my $response = shift;
+            $response = $response->isa('Dancer2::Core::Response') ? $response : $response->response;
 		    $response->push_header('Access-Control-Expose-Headers' => 'Authorization');
 	    }
 	 )
