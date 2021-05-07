@@ -13,6 +13,9 @@ use URI::QueryParam;
 register_hook qw(jwt_exception);
 
 my $fourWeeks = 4 * 24 * 60 * 60;
+my $DEFAULT_SET_AUTHORIZATION_HEADER = 1;
+my $DEFAULT_SET_COOKIE_HEADER = 1;
+my $DEFAULT_SET_LOCATION_HEADER = 1;
 
 my $secret;
 my $alg;
@@ -22,6 +25,9 @@ my $need_nbf = undef;
 my $need_exp = undef;
 my $need_leeway = undef;
 my $cookie_domain = undef;
+my $set_authorization_header = undef;
+my $set_cookie_header = undef;
+my $set_location_header = undef;
 
 register jwt => sub {
     my $dsl = shift;
@@ -47,6 +53,12 @@ on_plugin_import {
     $secret = $config->{secret};
 
     $cookie_domain = $config->{cookie_domain};
+    $set_authorization_header = defined $config->{set_authorization_header}
+            ? $config->{set_authorization_header} : $DEFAULT_SET_AUTHORIZATION_HEADER;
+    $set_cookie_header = defined $config->{set_cookie_header}
+            ? $config->{set_cookie_header} : $DEFAULT_SET_COOKIE_HEADER;
+    $set_location_header = defined $config->{set_location_header}
+            ? $config->{set_location_header} : $DEFAULT_SET_LOCATION_HEADER;
 
     $alg = 'HS256';
 
@@ -226,31 +238,40 @@ on_plugin_import {
             code => sub {
                 my $response = shift;
                 my $decoded = $dsl->app->request->var('jwt');
-                if (defined($decoded)) {
-                    my $encoded = encode_jwt( payload      => $decoded,
-                                              key          => $secret,
-                                              alg          => $alg,
-                                              enc          => $enc,
-                                              auto_iat     => $need_iat,
-                                              relative_exp => $need_exp,
-                                              relative_nbf => $need_nbf );
-                    $response->headers->authorization($encoded);
+                if($set_authorization_header || $set_cookie_header || $set_location_header) {
+                    # If all are disabled, then skip also encoding!
+                    if (defined($decoded)) {
+                        my $encoded = encode_jwt( payload      => $decoded,
+                                                  key          => $secret,
+                                                  alg          => $alg,
+                                                  enc          => $enc,
+                                                  auto_iat     => $need_iat,
+                                                  relative_exp => $need_exp,
+                                                  relative_nbf => $need_nbf );
 
-                    my %cookie =  (
-                        value     => $encoded,
-                        name      => '_jwt',
-                        expires   => time + ($need_exp // $fourWeeks),
-                        path      => '/',
-                        http_only => 0);
-                    $cookie{domain} = $cookie_domain if defined $cookie_domain;
-                    $response->push_header('Set-Cookie' => Dancer2::Core::Cookie->new(%cookie)->to_header());
+                        if($set_authorization_header) {
+                            $response->headers->authorization($encoded);
+                        }
 
-                    if ($response->status =~ /^3/) {
-                        my $u = URI->new( $response->header("Location") );
-                        $u->query_param( _jwt => $encoded);
-                         $response->header(Location => $u);
-                     }
-                }
+                        if($set_cookie_header) {
+                            my %cookie =  (
+                                value     => $encoded,
+                                name      => '_jwt',
+                                expires   => time + ($need_exp // $fourWeeks),
+                                path      => '/',
+                                http_only => 0);
+                            $cookie{domain} = $cookie_domain if defined $cookie_domain;
+                            $response->push_header('Set-Cookie'
+                                => Dancer2::Core::Cookie->new(%cookie)->to_header());
+                        }
+
+                        if ($set_location_header && $response->status =~ /^3/) {
+                            my $u = URI->new( $response->header("Location") );
+                            $u->query_param( _jwt => $encoded);
+                            $response->header(Location => $u);
+                        }
+                    }
+                } # ! $set_authorization_header && ! $set_cookie_header && ! $set_location_header
             }
         )
     );
@@ -319,9 +340,21 @@ To this to work it is required to have a secret defined in your config.yml file:
           need_leeway: 30
           # JWT cookie domain, in case you need to override it
           cookie_domain: my_domain.com
+          # Attach Authorization header to HTTP response
+          set_authorization: 0
+          # Attach Set-Cookie header to HTTP response
+          set_cookie: 0
+          # Attach Location header to HTTP response when response is 300-399
+          # e.g. redirect
+          set_location: 0
 
 B<NOTE:> A empty call (without arguments) to jwt will trigger the
 exception hook if there is no jwt defined.
+
+B<NOTE:> If you are using JWT to authenticate an API call to return, e.g. JSON,
+not a web page to display, be sure to set the config items
+set_authorization_header, set_cookie_header and set_location_header
+so you don't return any unnecessary headers.
 
 =head1 BUGS
 
