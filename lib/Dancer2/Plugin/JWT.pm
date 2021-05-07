@@ -209,7 +209,6 @@ on_plugin_import {
                         $app->execute_hook('plugin.jwt.jwt_exception' => ($a = $@));
                     };
                     $app->request->var('jwt', $decoded);
-		    ## no token
                     $app->request->var('jwt_status' => 'present');
 
                 }
