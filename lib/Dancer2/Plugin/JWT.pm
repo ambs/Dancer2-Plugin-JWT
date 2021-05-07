@@ -32,7 +32,7 @@ register jwt => sub {
     }
     else {
       if ($dsl->app->request->var('jwt_status') eq "missing") {
-	    $dsl->app->execute_hook('plugin.jwt.jwt_exception' => 'No JWT is present');
+          $dsl->app->execute_hook('plugin.jwt.jwt_exception' => 'No JWT is present');
       }
     }
     return $dsl->app->request->var('jwt') || undef;
@@ -77,17 +77,17 @@ on_plugin_import {
             my $hs = $1;
             my $a = $2;
 
-            if ( ( ( $a * 2 ) - $hs ) != 0 ) { 
+            if ( ( ( $a * 2 ) - $hs ) != 0 ) {
                 die "Incompatible A and HS values";
             }
 
             $alg = $config->{alg};
             $need_enc = 1;
-	} elsif ( $config->{alg} =~ /^RSA((-OAEP(-265)?)|1_5)$/ ) {
+        } elsif ( $config->{alg} =~ /^RSA((-OAEP(-265)?)|1_5)$/ ) {
             $alg = $config->{alg};
             $need_enc = 1;
             $need_key = 1;
-	} elsif ( $config->{alg} =~ /^ECDH-ES(\+A(128|192|256)KW)?$/ ) {
+        } elsif ( $config->{alg} =~ /^ECDH-ES(\+A(128|192|256)KW)?$/ ) {
             $alg = $config->{alg};
             $need_enc = 1;
             $need_key = 2;
@@ -106,7 +106,7 @@ on_plugin_import {
                 my $a = $1;
                 my $hs = $2;
 
-	        if ( ( ( $a * 2 ) - $hs ) != 0 ) { 
+                if ( ( ( $a * 2 ) - $hs ) != 0 ) {
                     die "Incompatible A and HS values";
                 }
 
@@ -114,38 +114,38 @@ on_plugin_import {
             }
         }
 
-	if ( defined $need_key ) {
-	    if ( $need_key eq 1 ) {
-		# TODO: add code to handle RSA keys or parse JWK hash string:
-		##instance of Crypt::PK::RSA
-		#my $data = decode_jwt(token=>$t, key=>Crypt::PK::RSA->new('keyfile.pem'));
-		#
-		##instance of Crypt::X509 (public key only)
-		#my $data = decode_jwt(token=>$t, key=>Crypt::X509->new(cert=>$cert));
-		#
-		##instance of Crypt::OpenSSL::X509 (public key only)
-		#my $data = decode_jwt(token=>$t, key=>Crypt::OpenSSL::X509->new_from_file('cert.pem'));
-	    } elsif ( $need_key eq 2 ) {
-		# TODO: add code to handle ECC keys or parse JWK hash string:
-		#instance of Crypt::PK::ECC
-		#my $data = decode_jwt(token=>$t, key=>Crypt::PK::ECC->new('keyfile.pem'));
-	    }
-	}
+        if ( defined $need_key ) {
+            if ( $need_key eq 1 ) {
+                # TODO: add code to handle RSA keys or parse JWK hash string:
+                ##instance of Crypt::PK::RSA
+                #my $data = decode_jwt(token=>$t, key=>Crypt::PK::RSA->new('keyfile.pem'));
+                #
+                ##instance of Crypt::X509 (public key only)
+                #my $data = decode_jwt(token=>$t, key=>Crypt::X509->new(cert=>$cert));
+                #
+                ##instance of Crypt::OpenSSL::X509 (public key only)
+                #my $data = decode_jwt(token=>$t, key=>Crypt::OpenSSL::X509->new_from_file('cert.pem'));
+            } elsif ( $need_key eq 2 ) {
+                # TODO: add code to handle ECC keys or parse JWK hash string:
+                #instance of Crypt::PK::ECC
+                #my $data = decode_jwt(token=>$t, key=>Crypt::PK::ECC->new('keyfile.pem'));
+            }
+        }
     }
 
     if ( exists $config->{need_iat} && defined $config->{need_iat} ) {
         $need_iat = $config->{need_iat};
     }
 
-    if ( exists $config->{need_nbf} && defined $config->{need_nbf} ) { 
+    if ( exists $config->{need_nbf} && defined $config->{need_nbf} ) {
         $need_nbf = $config->{need_nbf};
     }
 
-    if ( exists $config->{need_exp} && defined $config->{need_exp} ) { 
+    if ( exists $config->{need_exp} && defined $config->{need_exp} ) {
         $need_exp = $config->{need_exp};
     }
 
-    if ( exists $config->{need_leeway} && defined $config->{need_leeway} ) { 
+    if ( exists $config->{need_leeway} && defined $config->{need_leeway} ) {
         $need_leeway = $config->{need_leeway};
     }
 
@@ -160,16 +160,16 @@ on_plugin_import {
     );
 
     $dsl->app->add_hook(
-	Dancer2::Core::Hook->new(
-	    name => 'after',
-	    code => sub {
-		    my $response = shift;
-            $response = $response->isa('Dancer2::Core::Response') ? $response : $response->response;
-		    $response->push_header('Access-Control-Expose-Headers' => 'Authorization');
-	    }
-	 )
-  );
-    
+        Dancer2::Core::Hook->new(
+            name => 'after',
+            code => sub {
+                my $response = shift;
+                $response = $response->isa('Dancer2::Core::Response') ? $response : $response->response;
+                $response->push_header('Access-Control-Expose-Headers' => 'Authorization');
+            }
+        )
+    );
+
     $dsl->app->add_hook(
         Dancer2::Core::Hook->new(
             name => 'before',
@@ -196,27 +196,27 @@ on_plugin_import {
                 if ($encoded) {
                     my $decoded;
                     eval {
-                        $decoded = decode_jwt( token        => $encoded, 
-					       key          => $secret, 
-					       verify_iat   => $need_iat,
-					       verify_nbf   => $need_nbf,
-					       verify_exp   => defined $need_exp ? 1 : 0 ,
-					       leeway       => $need_leeway, 
-					       accepted_alg => $alg, 
-					       accepted_enc => $enc );
+                        $decoded = decode_jwt( token        => $encoded,
+                                               key          => $secret,
+                                               verify_iat   => $need_iat,
+                                               verify_nbf   => $need_nbf,
+                                               verify_exp   => defined $need_exp ? 1 : 0 ,
+                                               leeway       => $need_leeway,
+                                               accepted_alg => $alg,
+                                               accepted_enc => $enc );
                     };
                     if ($@) {
                         $app->execute_hook('plugin.jwt.jwt_exception' => ($a = $@));
                     };
                     $app->request->var('jwt', $decoded);
 		    ## no token
-		    $app->request->var('jwt_status' => 'present');
+                    $app->request->var('jwt_status' => 'present');
 
                 }
-		else {
-		    ## no token
-		    $app->request->var('jwt_status' => 'missing');
-		}
+                else {
+                    ## no token
+                    $app->request->var('jwt_status' => 'missing');
+                }
             }
         )
     );
@@ -228,21 +228,21 @@ on_plugin_import {
                 my $response = shift;
                 my $decoded = $dsl->app->request->var('jwt');
                 if (defined($decoded)) {
-                    my $encoded = encode_jwt( payload      => $decoded, 
-		                                      key          => $secret, 
-                      					      alg          => $alg,
-                      					      enc          => $enc,
-                      					      auto_iat     => $need_iat,
-                      					      relative_exp => $need_exp,
-                      					      relative_nbf => $need_nbf );
+                    my $encoded = encode_jwt( payload      => $decoded,
+                                              key          => $secret,
+                                              alg          => $alg,
+                                              enc          => $enc,
+                                              auto_iat     => $need_iat,
+                                              relative_exp => $need_exp,
+                                              relative_nbf => $need_nbf );
                     $response->headers->authorization($encoded);
 
                     my %cookie =  (
-                    	value     => $encoded,
-                    	name      => '_jwt',
-                    	expires   => time + ($need_exp // $fourWeeks),
-                    	path      => '/',
-                    	http_only => 0);
+                        value     => $encoded,
+                        name      => '_jwt',
+                        expires   => time + ($need_exp // $fourWeeks),
+                        path      => '/',
+                        http_only => 0);
                     $cookie{domain} = $cookie_domain if defined $cookie_domain;
                     $response->push_header('Set-Cookie' => Dancer2::Core::Cookie->new(%cookie)->to_header());
 
@@ -307,17 +307,17 @@ To this to work it is required to have a secret defined in your config.yml file:
       JWT:
           secret: "string or path to private RSA\EC key"
           # default, or others supported by Crypt::JWT
-          alg: HS256 
-          # required onlt for JWE 
-          enc: 
+          alg: HS256
+          # required onlt for JWE
+          enc:
           # add issued at field
-          need_iat: 1 
+          need_iat: 1
           # check not before field
-          need_nbf: 1 
+          need_nbf: 1
           # in seconds
-          need_exp: 600 
+          need_exp: 600
           # timeshift for expiration
-          need_leeway: 30 
+          need_leeway: 30
           # JWT cookie domain, in case you need to override it
           cookie_domain: my_domain.com
 
@@ -326,7 +326,7 @@ exception hook if there is no jwt defined.
 
 =head1 BUGS
 
-I am sure a lot. Please use GitHub issue tracker 
+I am sure a lot. Please use GitHub issue tracker
 L<here|https://github.com/ambs/Dancer2-Plugin-JWT/>.
 
 =head1 ACKNOWLEDGEMENTS
