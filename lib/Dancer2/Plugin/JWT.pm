@@ -325,12 +325,12 @@ To this to work it is required to have a secret defined in your config.yml file:
 
    plugins:
       JWT:
-          secret: "string or path to private RSA\EC key"
+          secret: "string or path to private RSA/EC key"
           # default, or others supported by Crypt::JWT
           alg: HS256
-          # required onlt for JWE
+          # required only for JWE
           enc:
-          # add issued at field
+          # add issued at time (iat) field
           need_iat: 1
           # check not before field
           need_nbf: 1
