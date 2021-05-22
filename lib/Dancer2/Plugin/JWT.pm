@@ -14,6 +14,7 @@ register_hook qw(jwt_exception);
 
 my $fourWeeks = 4 * 24 * 60 * 60;
 my $DEFAULT_SET_AUTHORIZATION_HEADER = 1;
+my $DEFAULT_EXPOSE_AUTHORIZATION_HEADER = 1;
 my $DEFAULT_SET_COOKIE_HEADER = 1;
 my $DEFAULT_SET_LOCATION_HEADER = 1;
 
@@ -26,6 +27,7 @@ my $need_exp = undef;
 my $need_leeway = undef;
 my $cookie_domain = undef;
 my $set_authorization_header = undef;
+my $expose_authorization_header = undef;
 my $set_cookie_header = undef;
 my $set_location_header = undef;
 
@@ -55,6 +57,8 @@ on_plugin_import {
     $cookie_domain = $config->{cookie_domain};
     $set_authorization_header = defined $config->{set_authorization_header}
             ? $config->{set_authorization_header} : $DEFAULT_SET_AUTHORIZATION_HEADER;
+    $expose_authorization_header = defined $config->{expose_authorization_header}
+            ? $config->{expose_authorization_header} : $DEFAULT_EXPOSE_AUTHORIZATION_HEADER;
     $set_cookie_header = defined $config->{set_cookie_header}
             ? $config->{set_cookie_header} : $DEFAULT_SET_COOKIE_HEADER;
     $set_location_header = defined $config->{set_location_header}
@@ -175,9 +179,11 @@ on_plugin_import {
         Dancer2::Core::Hook->new(
             name => 'after',
             code => sub {
-                my $response = shift;
-                $response = $response->isa('Dancer2::Core::Response') ? $response : $response->response;
-                $response->push_header('Access-Control-Expose-Headers' => 'Authorization');
+                if($expose_authorization_header) {
+                    my $response = shift;
+                    $response = $response->isa('Dancer2::Core::Response') ? $response : $response->response;
+                    $response->push_header('Access-Control-Expose-Headers' => 'Authorization');
+                }
             }
         )
     );
@@ -342,6 +348,8 @@ To this to work it is required to have a secret defined in your config.yml file:
           cookie_domain: my_domain.com
           # Attach Authorization header to HTTP response
           set_authorization: 0
+          # Attach 'Access-Control-Expose-Headers: Authorization' header to HTTP response
+          expose_authorization_header: 0
           # Attach Set-Cookie header to HTTP response
           set_cookie: 0
           # Attach Location header to HTTP response when response is 300-399
@@ -353,7 +361,8 @@ exception hook if there is no jwt defined.
 
 B<NOTE:> If you are using JWT to authenticate an API call to return, e.g. JSON,
 not a web page to display, be sure to set the config items
-set_authorization_header, set_cookie_header and set_location_header
+set_authorization_header, expose_authorization_header,
+set_cookie_header and set_location_header
 so you don't return any unnecessary headers.
 
 =head1 BUGS
