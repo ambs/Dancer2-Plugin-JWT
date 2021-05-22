@@ -347,22 +347,22 @@ To this to work it is required to have a secret defined in your config.yml file:
           # JWT cookie domain, in case you need to override it
           cookie_domain: my_domain.com
           # Attach Authorization header to HTTP response
-          set_authorization: 0
+          set_authorization_header: 0
           # Attach 'Access-Control-Expose-Headers: Authorization' header to HTTP response
           expose_authorization_header: 0
           # Attach Set-Cookie header to HTTP response
-          set_cookie: 0
+          set_cookie_header: 0
           # Attach Location header to HTTP response when response is 300-399
           # e.g. redirect
-          set_location: 0
+          set_location_header: 0
 
 B<NOTE:> A empty call (without arguments) to jwt will trigger the
 exception hook if there is no jwt defined.
 
 B<NOTE:> If you are using JWT to authenticate an API call to return, e.g. JSON,
 not a web page to display, be sure to set the config items
-set_authorization_header, expose_authorization_header,
-set_cookie_header and set_location_header
+I<set_authorization_header>, I<expose_authorization_header>,
+I<set_cookie_header> and I<set_location_header>
 so you don't return any unnecessary headers.
 
 =head1 BUGS
