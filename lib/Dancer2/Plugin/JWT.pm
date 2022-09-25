@@ -84,7 +84,7 @@ on_plugin_import {
             my $len = $1;
 
             if ( ( length( unpack( "H*", $secret ) ) * 4 ) != $len ) {
-                die "Secret key length must be equal " . $len / 8 . " bytes for selected algoritm";
+                die "Secret key length must be equal " . ($len / 8) . " bytes for selected algoritm";
             }
 
             $alg = $config->{alg};
