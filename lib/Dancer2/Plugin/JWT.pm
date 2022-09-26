@@ -84,7 +84,7 @@ on_plugin_import {
             my $len = $1;
 
             if ( ( length( unpack( "H*", $secret ) ) * 4 ) != $len ) {
-                die "Secret key length must be equal " . $len / 8 . " bytes for selected algoritm";
+                die "Secret key length must be equal " . ($len / 8) . " bytes for selected algoritm";
             }
 
             $alg = $config->{alg};
@@ -131,7 +131,7 @@ on_plugin_import {
         }
 
         if ( defined $need_key ) {
-            if ( $need_key eq 1 ) {
+            if ( $need_key == 1 ) {
                 # TODO: add code to handle RSA keys or parse JWK hash string:
                 ##instance of Crypt::PK::RSA
                 #my $data = decode_jwt(token=>$t, key=>Crypt::PK::RSA->new('keyfile.pem'));
@@ -141,7 +141,7 @@ on_plugin_import {
                 #
                 ##instance of Crypt::OpenSSL::X509 (public key only)
                 #my $data = decode_jwt(token=>$t, key=>Crypt::OpenSSL::X509->new_from_file('cert.pem'));
-            } elsif ( $need_key eq 2 ) {
+            } elsif ( $need_key == 2 ) {
                 # TODO: add code to handle ECC keys or parse JWK hash string:
                 #instance of Crypt::PK::ECC
                 #my $data = decode_jwt(token=>$t, key=>Crypt::PK::ECC->new('keyfile.pem'));
