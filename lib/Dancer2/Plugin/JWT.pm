@@ -224,7 +224,7 @@ on_plugin_import {
                                                accepted_enc => $enc );
                     };
                     if ($@) {
-                        $app->execute_hook('plugin.jwt.jwt_exception' => ($a = $@));
+                        $app->execute_hook('plugin.jwt.jwt_exception' => $@);
                     };
                     $app->request->var('jwt', $decoded);
                     $app->request->var('jwt_status' => 'present');
