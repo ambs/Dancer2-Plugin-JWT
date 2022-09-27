@@ -39,7 +39,7 @@ register jwt => sub {
       $dsl->app->request->var(jwt => $args[0]);
     }
     else {
-      if ($dsl->app->request->var('jwt_status') eq "missing") {
+      if ($dsl->app->request->var('jwt_status') eq 'missing') {
           $dsl->app->execute_hook('plugin.jwt.jwt_exception' => 'No JWT is present');
       }
     }
@@ -50,7 +50,7 @@ on_plugin_import {
     my $dsl = shift;
 
     my $config = plugin_setting;
-    die "JWT cannot be used without a secret!" unless (exists $config->{secret} && defined $config->{secret});
+    die 'JWT cannot be used without a secret!' unless (exists $config->{secret} && defined $config->{secret});
     # For RSA and ES algorithms - path to keyfile or JWK string, others algorithms - just secret string
     $secret = $config->{secret};
 
@@ -83,8 +83,8 @@ on_plugin_import {
         } elsif ( $config->{alg} =~ /^A(128|192|256)(GCM)?KW$/ ) {
             my $len = $1;
 
-            if ( ( length( unpack( "H*", $secret ) ) * 4 ) != $len ) {
-                die "Secret key length must be equal " . ($len / 8) . " bytes for selected algoritm";
+            if ( ( length( unpack( 'H*', $secret ) ) * 4 ) != $len ) {
+                die 'Secret key length must be equal ' . ($len / 8) . ' bytes for selected algoritm';
             }
 
             $alg = $config->{alg};
@@ -94,7 +94,7 @@ on_plugin_import {
             my $a = $2;
 
             if ( ( ( $a * 2 ) - $hs ) != 0 ) {
-                die "Incompatible A and HS values";
+                die 'Incompatible A and HS values';
             }
 
             $alg = $config->{alg};
@@ -108,12 +108,12 @@ on_plugin_import {
             $need_enc = 1;
             $need_key = 2;
         } else {
-            die "Unknown algoritm";
+            die 'Unknown algoritm';
         }
 
         if ( $need_enc ) {
             unless ( exists $config->{enc} && defined $config->{enc} ) {
-                die "JWE cannot be used with empty encryption method";
+                die 'JWE cannot be used with empty encryption method';
             }
 
             if ( $config->{enc} =~ /^A(128|192|256)GCM$/ ) {
@@ -123,7 +123,7 @@ on_plugin_import {
                 my $hs = $2;
 
                 if ( ( ( $a * 2 ) - $hs ) != 0 ) {
-                    die "Incompatible A and HS values";
+                    die 'Incompatible A and HS values';
                 }
 
                 $enc = $config->{enc};
@@ -272,7 +272,7 @@ on_plugin_import {
                         }
 
                         if ($set_location_header && $response->status =~ /^3/) {
-                            my $u = URI->new( $response->header("Location") );
+                            my $u = URI->new( $response->header('Location') );
                             $u->query_param( _jwt => $encoded);
                             $response->header(Location => $u);
                         }
