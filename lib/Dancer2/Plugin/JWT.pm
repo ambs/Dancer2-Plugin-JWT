@@ -50,7 +50,7 @@ on_plugin_import {
     my $dsl = shift;
 
     my $config = plugin_setting;
-    die 'JWT cannot be used without a secret!' unless (exists $config->{secret} && defined $config->{secret});
+    die 'JWT cannot be used without a secret!' unless exists $config->{secret} and defined $config->{secret};
     # For RSA and ES algorithms - path to keyfile or JWK string, others algorithms - just secret string
     $secret = $config->{secret};
 
@@ -179,7 +179,7 @@ on_plugin_import {
         Dancer2::Core::Hook->new(
             name => 'after',
             code => sub {
-                if($expose_authorization_header) {
+                if ($expose_authorization_header) {
                     my $response = shift;
                     $response = $response->isa('Dancer2::Core::Response') ? $response : $response->response;
                     $response->push_header('Access-Control-Expose-Headers' => 'Authorization');
@@ -224,7 +224,7 @@ on_plugin_import {
                                                accepted_enc => $enc );
                     };
                     if ($@) {
-                        $app->execute_hook('plugin.jwt.jwt_exception' => $@);
+                        $app->execute_hook('plugin.jwt.jwt_exception' => ($a = $@));  # this is weird, but required!
                     };
                     $app->request->var('jwt', $decoded);
                     $app->request->var('jwt_status' => 'present');
