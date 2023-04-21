@@ -204,7 +204,7 @@ on_plugin_import {
                     $encoded = $+{token};
                 }
 
-                if ($app->request->cookies->{_jwt}) {
+                if ($set_cookie_header && $app->request->cookies->{_jwt}) {
                     $encoded = $app->request->cookies->{_jwt}->value ;
                 }
                 elsif ($app->request->param('_jwt')) {
